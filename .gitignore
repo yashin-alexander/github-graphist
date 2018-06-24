@@ -1,0 +1,11 @@
+graphist/auth.conf
+build
+dist
+bleserver.egg-info
+*.pytest_cache
+*~
+*.pyc
+.cache/
+.idea/
+*/__pycache__/
+*/_build/*
