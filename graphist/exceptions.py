@@ -28,5 +28,3 @@ class InvalidGraphQLQuery(Exception):
 
 class InvalidAPIRequest(Exception):
     pass
-
-

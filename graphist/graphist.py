@@ -1,23 +1,23 @@
-import requests
 import configparser
+import requests
 
-from constants import GITHUB_GRAPHQL_URL, GITHUB_API_URL
-from exceptions import (ConfigFileNotFound, AuthSectionNotFound,
-                        AccessTokenParameterNotFound, UsernameParameterNotFound,
-                        InvalidGraphQLQuery, InvalidAPIRequest)
+from .constants import GITHUB_GRAPHQL_URL, GITHUB_API_URL
+from .exceptions import (ConfigFileNotFound, AuthSectionNotFound,
+                         AccessTokenParameterNotFound, UsernameParameterNotFound,
+                         InvalidGraphQLQuery, InvalidAPIRequest)
 
 
 class GithubGraphist:
     def __init__(self):
-        self._config_parser = configparser.ConfigParser()
+        pass
 
     @property
     def auth(self):
-        return self._username, self._token
+        return self.username, self._token
 
     @property
-    def _username(self):
-        auth_data = self._read_config_file()
+    def username(self):
+        auth_data = self._get_auth_data()
         try:
             return auth_data['username']
         except KeyError as err:
@@ -25,21 +25,23 @@ class GithubGraphist:
 
     @property
     def _token(self):
-        auth_data = self._read_config_file()
+        auth_data = self._get_auth_data()
         try:
             return auth_data['token']
         except KeyError as err:
             raise AccessTokenParameterNotFound(err)
 
-    def _read_config_file(self):
+    @staticmethod
+    def _get_auth_data():
+        confparser = configparser.ConfigParser()
         try:
-            auth_data = self._config_parser.read('auth.conf')
+            auth_data = confparser.read('auth.conf')
         except configparser.MissingSectionHeaderError as err:
             raise AuthSectionNotFound(err)
         if not auth_data:
             raise ConfigFileNotFound()
         try:
-            return self._config_parser['auth']
+            return confparser['auth']
         except KeyError as err:
             raise AuthSectionNotFound(err)
 
@@ -55,7 +57,8 @@ class GithubGraphist:
 
         return response.text
 
-    def generate_api_request(self, parameters):
+    @staticmethod
+    def generate_api_request(parameters):
         request = GITHUB_API_URL
         for key in parameters.keys():
             if parameters[key]:
@@ -65,7 +68,8 @@ class GithubGraphist:
 
         return request
 
-    def perform_api_request(self, request):
+    @staticmethod
+    def perform_api_request(request):
         try:
             response = requests.get(request)
         except requests.exceptions.RequestException as err:
@@ -76,12 +80,15 @@ class GithubGraphist:
         return response.text
 
 
-if __name__ == '__main__':
+def main():
     gitgraph = GithubGraphist()
-    print(gitgraph._username)
-    print(gitgraph._token)
+    print(gitgraph.username)
     print(gitgraph.perform_graphql_request("{ viewer { login }}"))
-    parameters = {'users': 'yashin-alexander', 'repos': ''}
-    parameters = gitgraph.generate_api_request(parameters)
-    print(parameters)
-    print(gitgraph.perform_api_request(parameters))
+    request_parameters = {'users': 'yashin-alexander', 'repos': ''}
+    request_parameters = gitgraph.generate_api_request(request_parameters)
+    print(request_parameters)
+    print(gitgraph.perform_api_request(request_parameters))
+
+
+if __name__ == '__main__':
+    main()
